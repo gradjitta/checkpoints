@@ -27,7 +27,6 @@ evecs1 <- pc_2[, 1] * eig.vals[1]
 evecs2 <- pc_2[, 2] * eig.vals[2]
 lines(x=c(0, evecs1[1]), y=c(0, evecs1[2]), col = "red")
 lines(x=c(0, -evecs1[1]), y=c(0, -evecs1[2]), col = "red")
-lines(x=c(0, evecs2[1]), y=c(0, evecs2[2]), col = "red")
 
 
 

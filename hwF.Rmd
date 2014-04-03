@@ -1,0 +1,19 @@
+Assignment
+========================================================
+
+```{r}
+x <- rnorm(1000, mean = 0, sd = 1)
+y <- rnorm(1000, mean = 0, sd = 1)
+mat2 <- matrix(c(1,2,2,1), 2, 2)
+mat <- matrix(1000, 1000, 2)
+mat[, 1] <- x
+mat[, 2] <- y
+n1 <- mat%*%mat2
+
+```
+
+
+
+```{r fig.width=7, fig.height=6}
+plot(n1[, 1] , n1[, 2])
+```
