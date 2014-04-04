@@ -9,6 +9,11 @@ genDataPCA <- function(x, y, rot, flag) {
     mat[, 1] <- x
     mat[, 2] <- y
     data <- mat %*% rot
+    # rm <- rowMeans(data) data <- data - matrix(rep(rm, 2), 1000)
+    stardz <- function(x) {
+        (x - mean(x))/sd(x)
+    }
+    data <- apply(data, MARGIN = 2, FUN = stardz)
     if (flag == 1) {
         plot(data[, 1], data[, 2], col = rgb(0, 0, 0, 0.4))
     }
@@ -39,6 +44,8 @@ evecs1 <- pc_2[, 1] * eig.vals[1]
 evecs2 <- pc_2[, 2] * eig.vals[2]
 lines(x = c(0, evecs1[1]), y = c(0, evecs1[2]), col = "red")
 lines(x = c(0, -evecs1[1]), y = c(0, -evecs1[2]), col = "red")
+lines(x = c(0, evecs2[1]), y = c(0, evecs2[2]), col = "red")
+lines(x = c(0, -evecs2[1]), y = c(0, -evecs2[2]), col = "red")
 ```
 
 ![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1.png) 
@@ -63,7 +70,7 @@ variance.1
 
 ```
 ##       [,1]
-## [1,] 8.377
+## [1,] 1.801
 ```
 
 ```r
@@ -71,9 +78,9 @@ cov(data)
 ```
 
 ```
-##       [,1]  [,2]
-## [1,] 4.583 3.662
-## [2,] 3.662 4.842
+##        [,1]   [,2]
+## [1,] 1.0000 0.8015
+## [2,] 0.8015 1.0000
 ```
 
 ```r
@@ -82,7 +89,7 @@ variance.2
 
 ```
 ##       [,1]
-## [1,] 9.456
+## [1,] 1.799
 ```
 
 ```r
@@ -90,13 +97,185 @@ cov(data1)
 ```
 
 ```
-##        [,1]   [,2]
-## [1,]  5.063 -4.262
-## [2,] -4.262  5.322
+##         [,1]    [,2]
+## [1,]  1.0000 -0.7993
+## [2,] -0.7993  1.0000
 ```
 
 
 ### We can observe that the trace of covariance matrix is equal to the variance along the principle direction.
+
+```r
+x1 <- rnorm(1000, mean = 0, sd = 1)
+x2 <- rnorm(1000, mean = 0, sd = sqrt(3))
+rotv <- c(1, 1, -1, 1)/sqrt(2)
+rot2 <- matrix(rotv, 2, 2)
+d1 <- genDataPCA(x1, x2, rot2, 1)
+```
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
+
+
+Covariance and Eigenvectors
+
+```r
+cov(d1)
+```
+
+```
+##        [,1]   [,2]
+## [1,] 1.0000 0.5537
+## [2,] 0.5537 1.0000
+```
+
+```r
+eigen(cov(d1))
+```
+
+```
+## $values
+## [1] 1.5537 0.4463
+## 
+## $vectors
+##        [,1]    [,2]
+## [1,] 0.7071 -0.7071
+## [2,] 0.7071  0.7071
+```
+
+
+
+
+
+
+
+Exercise 2
+
+
+```r
+X <- matrix(c(5, -2, 0, 0, 3, 3, -1, 1, 2, 4, 0, 0, 4, 3, -2, 1, 0, -1, 0, 1, 
+    -1, 1, 0, -1, 3, -3, 4, 5, 3, -3, 5, -3, 5, 3, -3, 0, 1, -5, -7, 2, -4, 
+    5, -3, -2, 0, -4, 3, -3, 0, 0), nrow = 5, ncol = 10)
+# stardz <- function(x) {(x-mean(x))/sd(x)} dataX <- apply(t(X), MARGIN = 2,
+# FUN = stardz)
+Xeig.vecs <- eigen(cov(t(X)))$vectors
+Xeig.vals <- eigen(cov(t(X)))$values
+Xeig.vecs
+```
+
+```
+##         [,1]    [,2]     [,3]     [,4]     [,5]
+## [1,] -0.4170  0.6393  0.19905 -0.01067 -0.61457
+## [2,]  0.3237 -0.4736 -0.15753  0.23894 -0.76746
+## [3,] -0.6399 -0.2777 -0.02308  0.70500  0.12572
+## [4,] -0.5184 -0.2841 -0.54868 -0.58058 -0.11140
+## [5,]  0.2075  0.4574 -0.79623  0.32970  0.07132
+```
+
+```r
+ev <- Xeig.vals
+e1 <- Xeig.vecs[, 1:2]
+plot(t(X) %*% e1)
+for (j in 1:dim(e1)[1]) {
+    lines(x = c(0, sqrt(ev[1]) * e1[j, 1]), y = c(0, sqrt(ev[2]) * e1[j, 2]), 
+        col = "red")
+}
+```
+
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
+
+
+
+
+
+```r
+dGetUij <- function(i, j, Kd, A, U, lamdaij) {
+    return(sum(Kd[, j] * A[, i]))
+}
+dGetlamdaij <- function(i, j, U) {
+    U.tilda <- U %*% t(U)
+    return((i == j) - U.tilda[i, j])
+}
+getU <- function(new.U, mu.U, new.lambda) {
+    newdU <- 0 * new.U
+    nc <- dim(U)[1]
+    nr <- dim(U)[2]
+    for (j in 1:nc) {
+        for (i in 1:nr) {
+            newdU[i, j] <- dGetUij(i, j, Kd, A, new.U, new.lambda)
+        }
+    }
+    newdU <- newdU - new.lambda * ((2 * diag(1, 2) * new.U) + diag(1, 2)[2:1, 
+        ])
+    new.U <- new.U + mu.U * newdU
+    new.U
+}
+
+getLambda <- function(new.U, new.lambda, mu.lambda) {
+    dlambda <- 0 * new.lambda
+    nc <- dim(new.lambda)[1]
+    nr <- dim(new.lambda)[2]
+    for (j in 1:nc) {
+        for (i in 1:nr) {
+            dlambda[i, j] <- dGetlamdaij(i, j, new.U)
+        }
+    }
+    new.lambda <- new.lambda + mu.lambda * dlambda
+    new.lambda
+}
+
+############################################ 
+arr.new <- c(-0.9511, -1.6435, 2.3655, -2.9154, -3.701, 0.9511, -1.6435, 2.3655, 
+    -2.9154, 3.701)
+A <- matrix(arr.new, ncol = 2, nrow = 5)
+U <- matrix(1:4, 2, 2)
+U <- U * 0.1
+new.U <- eigen(U)$vectors
+K <- A %*% new.U
+Kd <- 4 * K * K * K
+new.lambda <- matrix(10:13, 2, 2)
+mu.lambda <- 0.01
+mu.U <- 0.01
+rotFA <- function(A, new.U, new.lambda, mu.lambda, mu.U) {
+    for (iter in 1:600) {
+        new.U <- getU(new.U, mu.U, new.lambda)
+        new.U <- eigen(U)$vectors
+        new.lambda <- getLambda(new.U, new.lambda, mu.lambda)
+        temp <- A %*% new.U
+    }
+    temp
+}
+e1 <- Xeig.vecs[, 1:2]
+Astar <- rotFA(e1, new.U, new.lambda, mu.lambda, mu.U)
+Astar
+```
+
+```
+##         [,1]      [,2]
+## [1,] -0.2912  0.645162
+## [2,]  0.2074 -0.491352
+## [3,]  0.5910  0.466447
+## [4,]  0.5276  0.353220
+## [5,] -0.4945  0.001564
+```
+
+```r
+plot(t(X) %*% e1)
+```
+
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7.png) 
+
+```r
+biplot(e1, 1:5)
+```
+
+```
+## Error: argument of length 0
+```
+
+```r
+# for (j in 1:dim(e1)[1]) { lines(x=c(0, -1*sqrt(ev[1])*Astar[j, 1]), y=c(0,
+# -1*sqrt(ev[2])*Astar[j, 2]), col = 'red') }
+```
 
 
 

@@ -16,8 +16,8 @@ pca <- function(data, k) {
   k.components
 }
 covariance.mat <- cov(data)
-x <- rnorm(1000, mean = 0, sd = 1)
-y <- rnorm(1000, mean = 0, sd = 1)
+x <- rnorm(1000, mean = 0, sd = 0.5)
+y <- rnorm(1000, mean = 0, sd = 0.5)
 rot <-matrix(c(1,2,2,1), 2, 2)
 data <- genDataPCA(x, y, rot)
 pc_2 <- pca(data, 2)
@@ -27,6 +27,8 @@ evecs1 <- pc_2[, 1] * eig.vals[1]
 evecs2 <- pc_2[, 2] * eig.vals[2]
 lines(x=c(0, evecs1[1]), y=c(0, evecs1[2]), col = "red")
 lines(x=c(0, -evecs1[1]), y=c(0, -evecs1[2]), col = "red")
+lines(x=c(0, evecs2[1]), y=c(0, evecs2[2]), col = "red")
+lines(x=c(0, -evecs2[1]), y=c(0, -evecs2[2]), col = "red")
 
 
 
