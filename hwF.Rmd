@@ -127,7 +127,7 @@ getU <- function(new.U, mu.U, new.lambda) {
       newdU[i, j] <- dGetUij(i, j, Kd, A, new.U, new.lambda)
     }
   }
-  newdU <- newdU - new.lambda * ((2*diag(1,2)*new.U)+diag(1,2)[2:1, ])
+  newdU <- newdU #- new.lambda * ((2*diag(1,2)*new.U)+diag(1,2)[2:1, ])
   new.U <- new.U + mu.U * newdU
   new.U
 }
@@ -155,16 +155,23 @@ K <- A %*% new.U
 Kd <- 4 * K * K * K
 new.lambda <- matrix(10:13, 2, 2)
 mu.lambda <- 0.01
-mu.U <- 0.01
-rotFA <- function(A, new.U, new.lambda, mu.lambda, mu.U) {
-  for (iter in 1:600) {
+mu.U <- 0.0001
+rotFA <- function(A, new.U, new.lambda, mu.lambda, mu.U, N) {
+  for (iter in 1:N) {
     new.U <- getU(new.U, mu.U, new.lambda)
-    new.U <- eigen(U)$vectors
-    new.lambda <- getLambda(new.U, new.lambda, mu.lambda)
+    diag.U <- sqrt(eigen(new.U %*% t(new.U))$values * diag(1,2))
+    temp.U <- solve(eigen(test.mat)$vectors %*% diag.U %*% t(eigen(test.mat)$vectors))
+    print(temp.U)
+    new.U <- temp.U %*% new.U
+    print( new.U %*% t(new.U))
+    #new.U <- eigen(U)$vectors
+    #new.lambda <- getLambda(new.U, new.lambda, mu.lambda)
     temp <- A %*% new.U
+    print(temp)
     }
   temp
   }
+rotFA
 e1 <- Xeig.vecs[, 1:2]
 Astar <- rotFA(e1, new.U, new.lambda, mu.lambda, mu.U)
 Astar
